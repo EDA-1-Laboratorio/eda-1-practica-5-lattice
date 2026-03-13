@@ -1,4 +1,4 @@
-/* 
+/*
  * Objetivo: Utilizar el comportamiento LIFO para invertir cadenas.
  */
 
@@ -7,8 +7,12 @@
 #include <ctype.h>
 #include <string.h>
 
-// Definición de tipos básicos
+// =========================================================
+// DEFINICIONES DE TIPOS
+// =========================================================
+
 typedef char DATA;
+
 typedef struct elemento {
     DATA d;
     struct elemento *siguiente;
@@ -19,19 +23,40 @@ typedef struct {
     ELEMENTO *tope;
 } PILA;
 
-// --- Funciones de Pila (A completar por el alumno) ---
-void inicializar(PILA *s);
-void push(PILA *s, DATA x);
-DATA pop(PILA *s);
-int estavacia(PILA *s);
+// =========================================================
+// PRIMITIVAS DE LA PILA
+// =========================================================
 
-/**
- * TAREA PRINCIPAL: Determinar si la cadena es palíndromo.
- * Estrategia sugerida:
- * 1. Recorrer la cadena y meter cada letra en la PILA A.
- * 2. Pasar la mitad de la PILA A a una PILA B para comparar 
- * (o usar una estrategia de inversión total).
- */
+void inicializar(PILA *s) {
+    s->cnt = 0;
+    s->tope = NULL;
+}
+
+int estavacia(PILA *s) {
+    return s->cnt == 0;
+}
+
+void push(PILA *s, DATA x) {
+    ELEMENTO *nuevo = (ELEMENTO *)malloc(sizeof(ELEMENTO));
+    nuevo->d = x;
+    nuevo->siguiente = s->tope;
+    s->tope = nuevo;
+    s->cnt++;
+}
+
+DATA pop(PILA *s) {
+    ELEMENTO *temp = s->tope;
+    DATA valor = temp->d;
+    s->tope = temp->siguiente;
+    s->cnt--;
+    free(temp);
+    return valor;
+}
+
+// =========================================================
+// FUNCIÓN PRINCIPAL: esPalindromo
+// =========================================================
+
 int esPalindromo(char cadena[]) {
     PILA original, invertida;
     inicializar(&original);
@@ -39,35 +64,63 @@ int esPalindromo(char cadena[]) {
 
     int i, longitud = strlen(cadena);
 
-    // 1. Filtrar y llenar la pila original
+    // 1. Filtrar solo letras y llenar 'original'
     for (i = 0; i < longitud; i++) {
-        if (isalpha(cadena[i])) { // Solo letras
-            char letra = tolower(cadena[i]);
-            push(&original, letra);
-        }
+        if (isalpha(cadena[i]))
+            push(&original, tolower(cadena[i]));
     }
 
-    // 2. Crear la versión invertida
-    // TIP: Al pasar elementos de una pila a otra, el orden se invierte.
-    // Pero para comparar, necesitamos que una mantenga el orden original.
-    // ¿Cómo usarías las dos pilas para tener la cadena al derecho y al revés?
-    
-    /* TODO: Implementar lógica de comparación usando las dos pilas */
+    // 2. Pasar original a invertida (el orden se invierte solo)
+    //    Luego reconstruir original pasando por copia
+    PILA copia;
+    inicializar(&copia);
 
-    return 1; // Retornar 1 si es palíndromo, 0 si no.
+    while (!estavacia(&original))
+        push(&invertida, pop(&original));
+
+    // Reconstruir original y tener copia al mismo tiempo
+    while (!estavacia(&invertida)) {
+        DATA c = pop(&invertida);
+        push(&original, c);
+        push(&copia, c);
+    }
+
+    // 3. Comparar original vs copia letra a letra
+    while (!estavacia(&original) && !estavacia(&copia)) {
+        if (pop(&original) != pop(&copia))
+            return 0; // No es palíndromo
+    }
+
+    return 1; // Es palíndromo
 }
 
+// =========================================================
+// MAIN
+// =========================================================
+
 int main() {
+    printf("--- TEST DE PALINDROMOS ---\n\n");
+
     char prueba1[] = "Anita lava la tina";
     char prueba2[] = "Estructuras de Datos";
+    char prueba3[] = "A man a plan a canal Panama";
+    char prueba4[] = "Reconocer";
+    char prueba5[] = "anita";
 
-    printf("--- TEST DE PALINDROMOS ---\n");
-    
-    printf("Prueba 1: '%s' -> %s\n", prueba1, 
+    printf("'%s'\n  -> %s\n\n", prueba1,
            esPalindromo(prueba1) ? "ES PALINDROMO" : "NO ES PALINDROMO");
-           
-    printf("Prueba 2: '%s' -> %s\n", prueba2, 
+
+    printf("'%s'\n  -> %s\n\n", prueba2,
            esPalindromo(prueba2) ? "ES PALINDROMO" : "NO ES PALINDROMO");
+
+    printf("'%s'\n  -> %s\n\n", prueba3,
+           esPalindromo(prueba3) ? "ES PALINDROMO" : "NO ES PALINDROMO");
+
+    printf("'%s'\n  -> %s\n\n", prueba4,
+           esPalindromo(prueba4) ? "ES PALINDROMO" : "NO ES PALINDROMO");
+
+    printf("'%s'\n  -> %s\n\n", prueba5,
+           esPalindromo(prueba5) ? "ES PALINDROMO" : "NO ES PALINDROMO");
 
     return 0;
 }
